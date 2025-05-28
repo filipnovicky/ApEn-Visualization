@@ -1,6 +1,6 @@
 # Visualization of Approximate Entropy Analysis
 
-An interactive web-based visualization demonstrating how Approximate Entropy (ApEn) distinguishes between regular and random signals through pattern matching analysis.
+An interactive web-based visualization demonstrating how Approximate Entropy (ApEn) distinguishes between regular and random signals through adaptive pattern matching analysis.
 
 ## 🎯 Live Demo
 
@@ -14,52 +14,60 @@ Approximate Entropy (ApEn) is a statistical measure used to quantify the regular
 - **Financial time series** (market volatility analysis)
 - **Physiological data** (hormone secretion patterns)
 - **Quality control** (manufacturing process monitoring)
+- **Complex systems analysis** (electrophysiological signals, seismic data)
 
 ## 🔬 How This Visualization Works
 
 ### Signal Analysis
 The visualization compares two types of signals:
-- **Regular Signal**: A periodic triangle wave with predictable patterns
-- **White Noise**: Random fluctuations with no underlying pattern
+- **Signal A (Red)**: Random fluctuations with no underlying pattern
+- **Signal B (Blue)**: Periodic oscillations with regular, repeating patterns (with adjustable noise)
 
 ### Pattern Matching Process
-1. **Analysis Window**: Extracts patterns from the first 10 samples
-2. **Pattern Search**: Finds similar patterns throughout the entire signal using Chebyshev distance
-3. **Counting**: Records how many times each pattern repeats
-4. **Calculation**: Computes ApEn using the mathematical formula
+1. **Analysis Window**: Extracts patterns from the first 10 samples (for educational demonstration)
+2. **Adaptive Tolerance**: Uses r = α × SD(signal) for each signal individually
+3. **Pattern Search**: Finds similar patterns throughout the entire signal using Chebyshev distance
+4. **Counting**: Records how many times each pattern repeats across the full signal
+5. **Calculation**: Computes ApEn using the mathematical formula
 
 ### Mathematical Foundation
 ```
-ApEn(m, r) = φ(m) - φ(m+1)
-φ(m) = (1/N) × Σ ln(Cᵢ(m)/N)
+ApEn(m, α) = φᵐ(r) - φᵐ⁺¹(r), where r = α × SD(signal)
+φᵐ(r) = (1/N) × Σ ln(Cᵢᵐ(r))
+Cᵢᵐ(r) = (number of patterns j such that d[x(i), x(j)] ≤ r) / N
+d[x(i), x(j)] = max|x(i+k) - x(j+k)| for k = 0, 1, ..., m-1 (Chebyshev distance)
 ```
 Where:
-- `m` = pattern length (2 or 3 points)
-- `r` = tolerance threshold (0.05)
-- `Cᵢ(m)` = count of patterns similar to pattern i
-- `N` = total number of patterns
+- `m` = pattern length (user-selectable: 2-5 points)
+- `α` = scaling factor (0.1-0.5) for adaptive tolerance
+- `r` = tolerance threshold = α × standard deviation of signal
+- `Cᵢᵐ(r)` = relative frequency of patterns similar to pattern i
+- `N` = total possible patterns in the signal
+- `i, j` are sampled from {1, 2, ..., N} with i ≠ j
 
 ## 🎮 Interactive Features
 
-- **Real-time Pattern Highlighting**: Watch as patterns are identified and matched
-- **Visual Signal Comparison**: See the difference between regular and random signals
-- **Pattern Count Tables**: View exact repetition counts for each pattern
-- **Mathematical Results**: Compare final ApEn values between signal types
+- **Adaptive Parameter Control**: Adjust pattern length (m), alpha scaling (α), and noise level
+- **Real-time Pattern Highlighting**: Watch as patterns are identified and matched throughout the signal
+- **Step-by-step Animation**: Control the analysis progression with play/pause and manual stepping
+- **Educational Analysis Window**: Demonstrates pattern extraction from a subset while searching the full signal
+- **Pattern Count Tables**: View exact repetition counts and relative frequencies (Cᵢᵐ(r)) for each pattern
+- **Mathematical Results**: Compare final ApEn values with detailed φ calculations
 
-## 📊 Key Insights
+## 📊 Key Insight
 
-- **Lower ApEn** → More regular/predictable signals
-- **Higher ApEn** → More irregular/random signals
-- **Pattern Persistence**: Regular signals maintain high pattern counts at both m=2 and m=3
-- **Pattern Decay**: Random signals show fewer matches as pattern length increases
+The visualization reveals the fundamental principle behind ApEn:
 
-## 🛠️ Technical Details
+**Pattern Persistence Principle**: If a signal is regular across a specific length, then the count of m-length and (m+1)-length patterns should be approximately equal. If the signal is irregular, there will be more m-length matches than (m+1)-length matches simply because of chances. Hence, φᵐ(r) - φᵐ⁺¹(r) will be higher for irregular systems, while both φ values should be approximately equal for signals showing regularities.
 
-- **Built with**: Pure HTML, CSS, and React (via CDN)
-- **Styling**: Tailwind CSS
-- **Deployment**: GitHub Pages
-- **Algorithm**: Chebyshev distance for pattern matching
-- **Responsive Design**: Works on desktop and mobile devices
+## 🎮 Interactive Features
+
+- **Adaptive Parameter Control**: Adjust pattern length (m), alpha scaling (α), and noise level
+- **Real-time Pattern Highlighting**: Watch as patterns are identified and matched throughout the signal
+- **Step-by-step Animation**: Control the analysis progression with play/pause and manual stepping
+- **Educational Analysis Window**: Demonstrates pattern extraction from a subset while searching the full signal
+- **Pattern Count Tables**: View exact repetition counts and relative frequencies (Cᵢᵐ(r)) for each pattern
+- **Mathematical Results**: Compare final ApEn values with detailed φ calculations
 
 ## 🚀 Usage
 
@@ -74,13 +82,16 @@ Simply visit the [live demo](https://filipnovicky.github.io/ApEn-Visualization/)
 2. Open `index.html` in your web browser
 3. No build process required!
 
+### Interactive Exploration
+Try to figure out how different parameters affect the analysis! Does the analysis still work properly when collected data are noisy? Does it help to increase α or m to combat noise? Can you explain why?
+
 ## 📚 Educational Value
 
 This visualization is designed for:
 - **Students** learning signal processing and time series analysis
-- **Researchers** needing to understand ApEn methodology
-- **Educators** teaching complexity measures in data
-- **Anyone** curious about pattern recognition in signals
+- **Researchers** needing to understand ApEn methodology and parameter selection
+- **Educators** teaching complexity measures and adaptive signal analysis
+- **Anyone** curious about pattern recognition in complex systems
 
 ## 🤖 AI-Generated Content
 
@@ -89,7 +100,6 @@ This visualization was created with assistance from **Claude.ai** (Anthropic). T
 ## 📖 References
 
 1. Pincus, S. M. (1991). Approximate entropy as a measure of system complexity. *Proceedings of the National Academy of Sciences*, 88(6), 2297-2301.
-2. Richman, J. S., & Moorman, J. R. (2000). Physiological time-series analysis using approximate entropy and sample entropy. *American Journal of Physiology-Heart and Circulatory Physiology*, 278(6), H2039-H2049.
 
 ## 📄 License
 
