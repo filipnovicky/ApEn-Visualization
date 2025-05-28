@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualization of Approximate Entropy Analysis</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const ApproximateEntropyAnimation = () => {
+          const [isPlaying, setIsPlaying] = useState(false);
+          const [currentM, setCurrentM] = useState(2);
+          const [highlightIndex, setHighlightIndex] = useState(0);
+          const [showMatrix, setShowMatrix] = useState(false);
+          const [r] = useState(0.05);
+          const intervalRef = useRef(null);
+
+          // Generate the two signals based on the image
+          const generateRegularSignal = () => {
+            const signal = [];
+            const period = 20;
+            for (let i = 0; i < 150; i++) {
+              const phase = (i % period) / period;
+              let value;
+              if (phase < 0.5) {
+                value = -0.5 + 2 * phase;
+              } else {
+                value = 0.5 - 2 * (phase - 0.5);
+              }
+              signal.push(value);
+            }
+            return signal;
+          };
+
+          const generateNoiseSignal = () => {
+            const signal = [];
+            for (let i = 0; i < 150; i++) {
+              signal.push((Math.random() - 0.5));
+            }
+            return signal;
+          };
+
+          const [regularSignal] = useState(generateRegularSignal());
+          const [noiseSignal] = useState(generateNoiseSignal());
+          const N_analysis = 10; // Only first 10 samples for analysis
+          const N_display = 50; // Show 50 samples in visualization
+
+          // Find similar patterns using Chebyshev distance - search entire signal but patterns from first 10
+          const findSimilarPatterns = (signal, startIndex, m, r) => {
+            // Only analyze patterns from first 10 samples
+            if (startIndex >= N_analysis - m + 1) return [];
+            
+            const currentPattern = signal.slice(startIndex, startIndex + m);
+            const similarPatterns = [];
+            
+            // Search for similar patterns throughout the entire displayed signal
+            for (let i = 0; i <= N_display - m; i++) {
+              const comparePattern = signal.slice(i, i + m);
+              
+              let chebyshevDistance = 0;
+              for (let j = 0; j < m; j++) {
+                const diff = Math.abs(currentPattern[j] - comparePattern[j]);
+                chebyshevDistance = Math.max(chebyshevDistance, diff);
+              }
+              
+              if (chebyshevDistance <= r) {
+                similarPatterns.push(i);
+              }
+            }
+            return similarPatterns;
+          };
+
+          // Create pattern repetition counts vector
+          const createPatternCounts = (signal, m, r) => {
+            const analysisPatterns = N_analysis - m + 1;
+            const counts = [];
+            
+            for (let i = 0; i < analysisPatterns; i++) {
+              const similarPatterns = findSimilarPatterns(signal, i, m, r);
+              counts.push(similarPatterns.length);
+            }
+            return counts;
+          };
+
+          // Compute approximate entropy using first 10 samples but counting similarities throughout entire signal
+          const computeApEn = (signal, m, r) => {
+            const numPatterns = N_analysis - m + 1;
+            let phi = 0;
+            
+            for (let i = 0; i < numPatterns; i++) {
+              const similarPatterns = findSimilarPatterns(signal, i, m, r);
+              // Use the correct normalization: divide by total patterns in analysis window, not display window
+              const C = similarPatterns.length / (N_analysis - m + 1);
+              if (C > 0) {
+                phi += Math.log(C);
+              }
+            }
+            
+            return phi / numPatterns;
+          };
+
+          const regularSimilar = findSimilarPatterns(regularSignal, highlightIndex, currentM, r);
+          const noiseSimilar = findSimilarPatterns(noiseSignal, highlightIndex, currentM, r);
+
+          const regularCountsM2 = createPatternCounts(regularSignal, 2, r);
+          const noiseCountsM2 = createPatternCounts(noiseSignal, 2, r);
+          const regularCountsM3 = createPatternCounts(regularSignal, 3, r);
+          const noiseCountsM3 = createPatternCounts(noiseSignal, 3, r);
+
+          // Compute ApEn
+          const regularPhi2 = computeApEn(regularSignal, 2, r);
+          const regularPhi3 = computeApEn(regularSignal, 3, r);
+          const regularApEn = regularPhi2 - regularPhi3;
+
+          const noisePhi2 = computeApEn(noiseSignal, 2, r);
+          const noisePhi3 = computeApEn(noiseSignal, 3, r);
+          const noiseApEn = noisePhi2 - noisePhi3;
+
+          useEffect(() => {
+            if (isPlaying) {
+              intervalRef.current = setInterval(() => {
+                setHighlightIndex(prev => {
+                  const next = prev + 1;
+                  const maxIndex = N_analysis - currentM;
+                  if (next >= maxIndex) {
+                    if (currentM === 2) {
+                      setCurrentM(3);
+                      return 0;
+                    } else {
+                      setShowMatrix(true);
+                      setIsPlaying(false);
+                      return 0;
+                    }
+                  }
+                  return next;
+                });
+              }, 1000);
+            } else {
+              clearInterval(intervalRef.current);
+            }
+            return () => clearInterval(intervalRef.current);
+          }, [isPlaying, currentM]);
+
+          const togglePlay = () => setIsPlaying(!isPlaying);
+          const reset = () => {
+            setHighlightIndex(0);
+            setCurrentM(2);
+            setShowMatrix(false);
+            setIsPlaying(false);
+          };
+
+          const SignalPlot = ({ signal, title, color, similarIndices }) => (
+            React.createElement('div', { className: 'mb-4' },
+              React.createElement('h4', { className: 'text-sm font-medium mb-2' }, title),
+              React.createElement('div', { className: 'relative h-24 bg-gray-50 border rounded' },
+                React.createElement('svg', { width: '100%', height: '100%', viewBox: '0 0 300 96' },
+                  // Main signal line
+                  React.createElement('polyline', {
+                    points: signal.slice(0, N_display).map((val, i) => `${i * 6},${48 - val * 70}`).join(' '),
+                    fill: 'none',
+                    stroke: color,
+                    strokeWidth: '1.5'
+                  }),
+                  
+                  // Analysis window indicator
+                  React.createElement('rect', {
+                    x: '0',
+                    y: '5',
+                    width: N_analysis * 6,
+                    height: '86',
+                    fill: 'rgba(0,100,255,0.1)',
+                    stroke: 'rgba(0,100,255,0.3)',
+                    strokeWidth: '1',
+                    strokeDasharray: '3,3'
+                  }),
+                  React.createElement('text', {
+                    x: N_analysis * 3,
+                    y: 20,
+                    textAnchor: 'middle',
+                    fontSize: '9',
+                    fill: '#0066ff',
+                    fontWeight: 'bold'
+                  }, 'Analysis Window'),
+                  
+                  // Highlight similar patterns throughout entire signal
+                  ...(!showMatrix ? similarIndices.filter(idx => idx !== highlightIndex).map((idx, index) =>
+                    React.createElement('g', { key: index },
+                      React.createElement('polyline', {
+                        points: signal.slice(idx, idx + currentM)
+                          .map((val, i) => `${(idx + i) * 6},${48 - val * 70}`).join(' '),
+                        fill: 'none',
+                        stroke: '#10b981',
+                        strokeWidth: '4',
+                        opacity: '0.8'
+                      }),
+                      ...signal.slice(idx, idx + currentM).map((val, i) =>
+                        React.createElement('circle', {
+                          key: i,
+                          cx: (idx + i) * 6,
+                          cy: 48 - val * 70,
+                          r: '2.5',
+                          fill: '#10b981',
+                          stroke: 'white',
+                          strokeWidth: '1'
+                        })
+                      )
+                    )
+                  ) : []),
+                  
+                  // Highlight current pattern in orange
+                  ...(!showMatrix && highlightIndex < N_analysis - currentM + 1 ? [
+                    React.createElement('polyline', {
+                      points: signal.slice(highlightIndex, highlightIndex + currentM)
+                        .map((val, i) => `${(highlightIndex + i) * 6},${48 - val * 70}`).join(' '),
+                      fill: 'none',
+                      stroke: '#ff6b35',
+                      strokeWidth: '4'
+                    }),
+                    
+                    ...signal.slice(highlightIndex, highlightIndex + currentM).map((val, i) =>
+                      React.createElement('circle', {
+                        key: i,
+                        cx: (highlightIndex + i) * 6,
+                        cy: 48 - val * 70,
+                        r: '4',
+                        fill: '#ff6b35',
+                        stroke: 'white',
+                        strokeWidth: '1'
+                      })
+                    ),
+                    
+                    React.createElement('text', {
+                      x: (highlightIndex + (currentM-1)/2) * 6,
+                      y: 35,
+                      textAnchor: 'middle',
+                      fontSize: '11',
+                      fill: '#ff6b35',
+                      fontWeight: 'bold'
+                    }, 'Current')
+                  ] : []),
+                  
+                  React.createElement('line', {
+                    x1: '0',
+                    y1: '48',
+                    x2: '300',
+                    y2: '48',
+                    stroke: '#ddd',
+                    strokeWidth: '1'
+                  }),
+                  
+                  // Sample indices
+                  ...Array.from({length: Math.min(20, N_display)}, (_, i) => i).filter(i => i % 2 === 0).map(i =>
+                    React.createElement('text', {
+                      key: i,
+                      x: i * 6,
+                      y: 90,
+                      textAnchor: 'middle',
+                      fontSize: '8',
+                      fill: i < N_analysis ? '#0066ff' : '#666',
+                      fontWeight: i < N_analysis ? 'bold' : 'normal'
+                    }, i)
+                  )
+                )
+              ),
+              !showMatrix && React.createElement('div', { className: 'text-xs mt-1 text-center' },
+                React.createElement('span', { className: 'text-orange-600 font-medium' }, 'Orange: Current pattern (from analysis window)'),
+                similarIndices.length > 1 && React.createElement('span', { className: 'ml-4 text-green-600 font-medium' },
+                  `Green: ${similarIndices.length - 1} similar patterns found throughout signal`
+                )
+              )
+            )
+          );
+
+          const PatternCountsTable = ({ counts, title, m, signalType }) => (
+            React.createElement('div', { className: 'mb-4' },
+              React.createElement('h4', { className: 'text-sm font-medium mb-2 text-center' }, title),
+              React.createElement('div', { className: 'bg-white border rounded overflow-hidden' },
+                React.createElement('table', { className: 'w-full text-sm' },
+                  React.createElement('thead', { className: 'bg-gray-50' },
+                    React.createElement('tr', {},
+                      React.createElement('th', { className: 'px-3 py-2 text-left border-r' }, 'Pattern'),
+                      React.createElement('th', { 
+                        className: 'px-3 py-2 text-center',
+                        dangerouslySetInnerHTML: { __html: `Count (C<sub>i</sub>(${m}))` }
+                      })
+                    )
+                  ),
+                  React.createElement('tbody', {},
+                    counts.map((count, index) =>
+                      React.createElement('tr', { key: index, className: 'border-t' },
+                        React.createElement('td', { className: 'px-3 py-2 border-r font-mono' }, `Pattern ${index + 1}`),
+                        React.createElement('td', {
+                          className: `px-3 py-2 text-center font-bold ${
+                            signalType === 'regular' ? 'text-blue-700' : 'text-red-700'
+                          }`
+                        }, count)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          );
+
+          return React.createElement('div', { className: 'max-w-6xl mx-auto p-6 bg-white' },
+            React.createElement('h2', { className: 'text-2xl font-bold mb-6 text-center' },
+              'Visualization of Approximate Entropy Analysis'
+            ),
+            
+            // Controls
+            React.createElement('div', { className: 'flex justify-center gap-4 mb-6' },
+              React.createElement('button', {
+                onClick: togglePlay,
+                className: 'flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+              }, isPlaying ? 'Pause' : 'Play'),
+              React.createElement('button', {
+                onClick: reset,
+                className: 'flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600'
+              }, 'Reset')
+            ),
+
+            !showMatrix ? [
+              // Current Analysis Info
+              React.createElement('div', { key: 'analysis', className: 'mb-6 p-4 bg-blue-50 rounded text-center' },
+                React.createElement('h3', { className: 'font-bold text-lg mb-2' },
+                  `Analyzing m=${currentM} patterns (Pattern ${highlightIndex + 1} of ${N_analysis - currentM + 1})`
+                ),
+                React.createElement('p', { className: 'text-gray-700' },
+                  currentM === 2 ? 
+                    'Taking patterns from first 10 samples, finding similar patterns throughout entire signal.' :
+                    'Looking at 3-point patterns from analysis window.'
+                )
+              ),
+
+              // Signal Plots
+              React.createElement('div', { key: 'plots', className: 'space-y-6' },
+                React.createElement(SignalPlot, {
+                  signal: noiseSignal,
+                  title: 'White Noise Signal f(t)',
+                  color: '#ef4444',
+                  similarIndices: noiseSimilar
+                }),
+                React.createElement(SignalPlot, {
+                  signal: regularSignal,
+                  title: 'Regular Signal u(t)',
+                  color: '#3b82f6',
+                  similarIndices: regularSimilar
+                })
+              )
+            ] : [
+              // ApEn Equation
+              React.createElement('div', { key: 'equation', className: 'mb-6 p-4 bg-gray-100 rounded' },
+                React.createElement('h3', { className: 'text-lg font-bold mb-3 text-center' }, 'Approximate Entropy Formula'),
+                React.createElement('div', { className: 'text-center' },
+                  React.createElement('div', { 
+                    className: 'text-lg font-mono mb-2',
+                    dangerouslySetInnerHTML: { __html: 'ApEn(m, r) = φ(m) - φ(m+1)' }
+                  }),
+                  React.createElement('div', { 
+                    className: 'text-sm font-mono mb-2',
+                    dangerouslySetInnerHTML: { __html: 'φ(m) = (1/N) × Σ ln(C<sub>i</sub>(m)/N)' }
+                  })
+                )
+              ),
+
+              // Pattern Repetition Counts
+              React.createElement('div', { key: 'counts', className: 'mb-8' },
+                React.createElement('h3', { className: 'text-xl font-bold mb-6 text-center' }, 'Pattern Repetition Counts'),
+                React.createElement('div', { className: 'text-sm text-center mb-6 text-gray-600' },
+                  'Shows how many times each pattern from the first 10 samples repeats throughout the entire signal'
+                ),
+                
+                React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-8' },
+                  React.createElement('div', {},
+                    React.createElement('h4', { className: 'text-lg font-medium mb-4 text-center text-blue-800' }, 'Regular Signal'),
+                    React.createElement(PatternCountsTable, {
+                      counts: regularCountsM2,
+                      title: 'm=2 Pattern Counts',
+                      m: 2,
+                      signalType: 'regular'
+                    }),
+                    React.createElement(PatternCountsTable, {
+                      counts: regularCountsM3,
+                      title: 'm=3 Pattern Counts',
+                      m: 3,
+                      signalType: 'regular'
+                    })
+                  ),
+                  
+                  React.createElement('div', {},
+                    React.createElement('h4', { className: 'text-lg font-medium mb-4 text-center text-red-800' }, 'White Noise'),
+                    React.createElement(PatternCountsTable, {
+                      counts: noiseCountsM2,
+                      title: 'm=2 Pattern Counts',
+                      m: 2,
+                      signalType: 'noise'
+                    }),
+                    React.createElement(PatternCountsTable, {
+                      counts: noiseCountsM3,
+                      title: 'm=3 Pattern Counts',
+                      m: 3,
+                      signalType: 'noise'
+                    })
+                  )
+                )
+              ),
+
+              // ApEn Results
+              React.createElement('div', { key: 'results', className: 'bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8' },
+                React.createElement('h3', { className: 'text-lg font-bold mb-4 text-center' }, 'Approximate Entropy Results'),
+                
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                  React.createElement('div', { className: 'text-center' },
+                    React.createElement('h4', { className: 'font-medium text-blue-800 mb-2' }, 'Regular Signal'),
+                    React.createElement('div', { className: 'bg-white p-4 rounded' },
+                      React.createElement('div', {}, `φ(2) = ${regularPhi2.toFixed(4)}`),
+                      React.createElement('div', {}, `φ(3) = ${regularPhi3.toFixed(4)}`),
+                      React.createElement('div', { className: 'text-lg font-bold mt-2 text-blue-800' },
+                        `ApEn = ${regularApEn.toFixed(4)}`
+                      )
+                    )
+                  ),
+                  
+                  React.createElement('div', { className: 'text-center' },
+                    React.createElement('h4', { className: 'font-medium text-red-800 mb-2' }, 'White Noise'),
+                    React.createElement('div', { className: 'bg-white p-4 rounded' },
+                      React.createElement('div', {}, `φ(2) = ${noisePhi2.toFixed(4)}`),
+                      React.createElement('div', {}, `φ(3) = ${noisePhi3.toFixed(4)}`),
+                      React.createElement('div', { className: 'text-lg font-bold mt-2 text-red-800' },
+                        `ApEn = ${noiseApEn.toFixed(4)}`
+                      )
+                    )
+                  )
+                ),
+                
+                React.createElement('div', { className: 'text-center mt-4 text-sm text-gray-700' },
+                  React.createElement('strong', {}, 'Lower ApEn'), ' = more regular/predictable • ',
+                  React.createElement('strong', {}, 'Higher ApEn'), ' = more irregular/random'
+                )
+              )
+            ],
+
+            React.createElement('div', { className: 'mt-4 text-xs text-center text-gray-500' },
+              `Chebyshev distance with r = ${r} • Analysis: first ${N_analysis} samples • Display: first ${N_display} samples`
+            )
+          );
+        };
+
+        ReactDOM.render(React.createElement(ApproximateEntropyAnimation), document.getElementById('root'));
+    </script>
+</body>
+</html>
