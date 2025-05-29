@@ -43,7 +43,7 @@ Where:
 - `r` = tolerance threshold = α × standard deviation of signal
 - `Cᵢᵐ(r)` = relative frequency of patterns similar to pattern i
 - `N` = total possible patterns in the signal
-- `i, j` are sampled from {1, 2, ..., N} with i ≠ j
+- `i, j` are sampled from {1, 2, ..., N}
 
 ## 🎮 Interactive Features
 
