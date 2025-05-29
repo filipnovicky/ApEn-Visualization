@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+// Add "Analysis Window" text
+            ctx.fillStyle = '#0066ff';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'center';
+<!--             ctx.fillText('Analysis Window', analysisWidth / 2, 20);<!DOCTYPE html> -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -353,7 +357,7 @@
             <button id="prevBtn">← Previous</button>
             <button id="playBtn">Play</button>
             <button id="nextBtn">Next →</button>
-            <button id="lastBtn">Last Pattern</button>
+            <button id="lastBtn">Show Results</button>
             <button id="resetBtn">Reset</button>
         </div>
         
@@ -679,7 +683,7 @@
             ctx.restore();  // Restore context state
             
             // Highlight similar patterns
-            if (!showResults && highlightIndex < N_ANALYSIS - currentM + 1) {
+            if (highlightIndex < N_ANALYSIS - currentM + 1) {
                 // Draw similar patterns in green
                 ctx.strokeStyle = '#66bb6a';
                 ctx.lineWidth = 4;
@@ -862,6 +866,14 @@
         // Show results
         function showApEnResults() {
             showResults = true;
+            isPlaying = false;  // Stop playing if it was running
+            clearInterval(animationInterval);  // Clear any running animation
+            document.getElementById('playBtn').textContent = 'Play';  // Reset play button text
+            
+            // Set to last pattern of m+1
+            currentM = m + 1;
+            highlightIndex = N_ANALYSIS - (m + 1);
+            
             document.getElementById('formulaSection').style.display = 'block';
             document.getElementById('analysisInfo').style.display = 'none';
             document.getElementById('signalAInfo').style.display = 'block';
@@ -892,6 +904,9 @@
             // Clear match info
             document.getElementById('signalAMatches').textContent = '';
             document.getElementById('signalBMatches').textContent = '';
+            
+            // Update visualization to show last pattern
+            updateVisualization();
         }
         
         // Animation controls
@@ -978,14 +993,8 @@
             updateVisualization();
         });
         
-        document.getElementById('lastBtn').addEventListener('click', function() {
-            if (!showResults) {
-                // Go directly to results
-                showApEnResults();
-            }
-        });
-        
-        function reset() {
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            // Reset to first pattern
             currentM = m;
             highlightIndex = 0;
             showResults = false;
@@ -993,11 +1002,42 @@
             document.getElementById('playBtn').textContent = 'Play';
             document.getElementById('formulaSection').style.display = 'none';
             document.getElementById('analysisInfo').style.display = 'block';
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+            updateVisualization();
+        });
+        
+        document.getElementById('lastBtn').addEventListener('click', function() {
+            // Always allow showing results
+            showApEnResults();
+        });
+        
+        function reset() {
+            // Reset all state variables
+            currentM = m;
+            highlightIndex = 0;
+            showResults = false;
+            isPlaying = false;
+            
+            // Reset UI elements
+            document.getElementById('playBtn').textContent = 'Play';
+            document.getElementById('formulaSection').style.display = 'none';
+            document.getElementById('analysisInfo').style.display = 'block';
             document.getElementById('signalAInfo').style.display = 'block';
             document.getElementById('signalBInfo').style.display = 'block';
-            clearInterval(animationInterval);
+            
+            // Clear any running animations
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            // Regenerate signals
             signalA = [];  // Clear signal A so it gets regenerated
             generateSignals();
+            
+            // Update visualization
             updateVisualization();
             
             // Update info displays
@@ -1006,6 +1046,9 @@
             // Reset pattern labels
             document.getElementById('signalAPattern').textContent = '';
             document.getElementById('signalBPattern').textContent = '';
+            
+            // Update status
+            document.getElementById('status').textContent = `Analyzing m=${m}, Pattern 1 of ${N_ANALYSIS - m + 1}`;
         }
         
         // Initialize
