@@ -736,12 +736,12 @@
                     ctx.stroke();
                 }
                 
-                // Add "Current" label
+                // Add pattern label
                 ctx.fillStyle = '#ff8a65';
                 ctx.font = 'bold 11px Arial';
                 ctx.textAlign = 'center';
-                const labelX = ((highlightIndex + (currentM - 1) / 2) / N_DISPLAY) * canvas.width;
-                ctx.fillText('Current', labelX, 35);
+                const labelX = ((highlightIndex + (currentM - 1) / 2) / N_DISPLAY) * canvas.width + 20;
+                ctx.fillText(`Pattern ${highlightIndex + 1}`, labelX, 35);
             }
             
             // Draw center line
@@ -828,8 +828,8 @@
                 
                 // Update pattern labels
                 if (highlightIndex < N_ANALYSIS - currentM + 1) {
-                    document.getElementById('signalAPattern').textContent = `Pattern ${highlightIndex + 1}`;
-                    document.getElementById('signalBPattern').textContent = `Pattern ${highlightIndex + 1}`;
+                    document.getElementById('signalAPattern').textContent = '';
+                    document.getElementById('signalBPattern').textContent = '';
                 } else {
                     document.getElementById('signalAPattern').textContent = '';
                     document.getElementById('signalBPattern').textContent = '';
@@ -1004,8 +1004,8 @@
             document.getElementById('displayLengthInfo').textContent = N_DISPLAY;
             
             // Reset pattern labels
-            document.getElementById('signalAPattern').textContent = 'Pattern 1';
-            document.getElementById('signalBPattern').textContent = 'Pattern 1';
+            document.getElementById('signalAPattern').textContent = '';
+            document.getElementById('signalBPattern').textContent = '';
         }
         
         // Initialize
