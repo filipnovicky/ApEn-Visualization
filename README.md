@@ -1,20 +1,12 @@
-# Visualization of Approximate Entropy Analysis
+# Approximate Entropy
 
-An interactive web-based visualization demonstrating how Approximate Entropy (ApEn) distinguishes between regular and random signals through adaptive pattern matching analysis.
+Consider analyzing sensor data from a complex dynamical system - perhaps temperature fluctuations in a chemical reactor, stock market prices, seismic activity recordings, or electrophysiological signals. These signals appear intricate and unpredictable, yet some may contain underlying regularities while others are purely chaotic.
+
+Approximate Entropy (ApEn) addresses this challenge by quantifying pattern regularity without requiring knowledge of the underlying mathematical function the system can be described with. Even when we cannot understand the specific mechanisms generating the signal, we can assess whether there is some inherent regularity or randomness - something that can be informative about the complexity of the system.
 
 ## 🎯 Live Demo
 
 **[View Interactive Visualization](https://filipnovicky.github.io/ApEn-Visualization/)**
-
-## 📖 What is Approximate Entropy?
-
-Approximate Entropy (ApEn) is a statistical measure used to quantify the regularity and predictability of time-series data. It was introduced by Steve Pincus in 1991 and is widely used in:
-
-- **Biomedical signal analysis** (heart rate variability, EEG signals)
-- **Financial time series** (market volatility analysis)
-- **Physiological data** (hormone secretion patterns)
-- **Quality control** (manufacturing process monitoring)
-- **Complex systems analysis** (electrophysiological signals, seismic data)
 
 ## 🔬 How This Visualization Works
 
@@ -60,19 +52,6 @@ The visualization reveals the fundamental principle behind ApEn:
 
 **Pattern Persistence Principle**: If a signal is regular across a specific length, then the count of m-length and (m+1)-length patterns should be approximately equal. If the signal is irregular, there will be more m-length matches than (m+1)-length matches simply because of chances. Hence, φᵐ(r) - φᵐ⁺¹(r) will be higher for irregular systems, while both φ values should be approximately equal for signals showing regularities.
 
-## 🎮 Interactive Features
-
-- **Adaptive Parameter Control**: Adjust pattern length (m), alpha scaling (α), and noise level
-- **Real-time Pattern Highlighting**: Watch as patterns are identified and matched throughout the signal
-- **Step-by-step Animation**: Control the analysis progression with play/pause and manual stepping
-- **Educational Analysis Window**: Demonstrates pattern extraction from a subset while searching the full signal
-- **Pattern Count Tables**: View exact repetition counts and relative frequencies (Cᵢᵐ(r)) for each pattern
-- **Mathematical Results**: Compare final ApEn values with detailed φ calculations
-
-## 🚀 Usage
-
-### Online
-Simply visit the [live demo](https://filipnovicky.github.io/ApEn-Visualization/) in any modern web browser.
 
 ### Local Development
 1. Clone this repository:
@@ -81,17 +60,6 @@ Simply visit the [live demo](https://filipnovicky.github.io/ApEn-Visualization/)
    ```
 2. Open `index.html` in your web browser
 3. No build process required!
-
-### Interactive Exploration
-Try to figure out how different parameters affect the analysis! Does the analysis still work properly when collected data are noisy? Does it help to increase α or m to combat noise? Can you explain why?
-
-## 📚 Educational Value
-
-This visualization is designed for:
-- **Students** learning signal processing and time series analysis
-- **Researchers** needing to understand ApEn methodology and parameter selection
-- **Educators** teaching complexity measures and adaptive signal analysis
-- **Anyone** curious about pattern recognition in complex systems
 
 ## 🤖 AI-Generated Content
 
@@ -112,4 +80,4 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ---
 
-*Made with ❤️ and Claude.ai for educational purposes*
+*Made with Claude.ai for educational purposes*
