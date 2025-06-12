@@ -297,33 +297,21 @@
     <div class="container">
         <h1>Visualization of Approximate Entropy Analysis</h1>
         
-        <div class="intro-box">
-            <h2>How do you measure the regularity of a signal when you don't know what function it follows?</h2>
-            
-            <p>Consider analyzing <strong>sensor data from a complex dynamical system</strong> - perhaps temperature fluctuations in a chemical reactor, stock market prices, seismic activity recordings, or electrophysiological signals. These signals appear intricate and unpredictable, yet some may contain underlying regularities while others are purely chaotic.</p>
-            
-            <p><strong>Approximate Entropy (ApEn)</strong> addresses this challenge by quantifying pattern regularity without requiring knowledge of the underlying mathematical function the system can be described with. Even when we cannot understand the specific mechanisms generating the signal, we can assess whether there is some inherent regularity or randomness - something that can be informative about the complexity of the system.</p>
-            
-            <div class="explore-box">
-                <h4>What you'll explore:</h4>
-                <div class="explore-grid">
-                    <div>
-                        <p><strong>Signal A (Red):</strong> Random fluctuations - irregular, unpredictable patterns. You can press reset to generate another random signal</p>
-                        <p><strong>Signal B (Blue):</strong> Periodic oscillations - regular, repeating patterns</p>
-                    </div>
-                    <div>
-                        <p><strong>Pattern Length:</strong> Number of consecutive points in each pattern</p>
-                        <p><strong>Alpha (α):</strong> Scaling factor for adaptive tolerance (r = α × standard deviation (SD))</p>
-                        <p><strong>Noise Level:</strong> Add noise to the regular recording</p>
-                        <p><strong>Analysis Window:</strong> The first 10 samples highlighted for visualization - helps you see the pattern matching process step by step (the actual ApEn calculation uses all patterns)</p>
-                    </div>
+        <div class="explore-box">
+            <h4>What you'll explore:</h4>
+            <div class="explore-grid">
+                <div>
+                    <p><strong>Signal A (Red):</strong> Random fluctuations - irregular, unpredictable patterns.</p>
+                    <p><strong>Signal B (Blue):</strong> Periodic oscillations - regular, repeating patterns</p>
+                </div>
+                <div>
+                    <p><strong>Pattern Length:</strong> Number of consecutive points in each pattern</p>
+                    <p><strong>Alpha (α):</strong> Scaling factor for adaptive tolerance (r = α × standard deviation (SD))</p>
+                    <p><strong>Noise Level:</strong> Add noise to the regular recording</p>
+                    <p><strong>Analysis Window:</strong> The first 10 samples highlighted in the blue box for visualization - helps you see the pattern matching process step by step (the actual ApEn calculation uses all patterns)</p>
                 </div>
             </div>
             
-            <div class="interactive-box">
-                <h4>Interactive Exploration:</h4>
-                <p style="font-size: 0.875rem; color: #374151;">Try to figure out how different parameters affect the analysis! Does the analysis still work properly when collected data are noisy? Does it help to increase α or m to combat noise, or does it matter if there's enough data? Can you explain why?</p>
-            </div>
         </div>
         
         <div class="controls">
@@ -675,7 +663,7 @@
             ctx.fillStyle = '#0066ff';
             ctx.font = 'bold 11px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('Analysis Window', analysisWidth / 2, 20);
+            // ctx.fillText('Analysis Window', analysisWidth / 2, 20);
             ctx.restore();  // Restore context state
             
             // Highlight similar patterns
